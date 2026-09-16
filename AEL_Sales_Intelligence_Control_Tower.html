@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AEL Sales Intelligence Control Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --navy:#0B1F33; --blue:#123B5D; --slate:#475569; --bg:#F5F7FA; --white:#fff;
+  --pos:#16845B; --warn:#D99A00; --neg:#C83E4D; --crit:#8B1E2D;
+  --line:#E5E9F0; --muted:#64748b; --ink:#0B1F33;
+  --healthy:#16845B; --watch:#D99A00; --risk:#E8833A; --critical:#C83E4D; --nodata:#94a3b8;
+  --radius:12px; --shadow:0 1px 2px rgba(11,31,51,.05),0 6px 18px rgba(11,31,51,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+
+/* ===== Layout ===== */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:250px;flex:0 0 250px;background:var(--navy);color:#cbd5e1;display:flex;flex-direction:column;overflow-y:auto}
+.sidebar .logo{padding:20px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar .logo b{color:#fff;font-size:15px;letter-spacing:-.01em;display:block}
+.sidebar .logo span{font-size:11px;color:#7c93ab;letter-spacing:.06em;text-transform:uppercase}
+.menu{padding:10px 0;flex:1}
+.menu .grp{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#5d718a;padding:14px 20px 6px}
+.menu a{display:flex;align-items:center;gap:11px;padding:9px 20px;font-size:13px;color:#cbd5e1;border-left:3px solid transparent}
+.menu a:hover{background:rgba(255,255,255,.05);color:#fff}
+.menu a.active{background:rgba(255,255,255,.08);color:#fff;border-left-color:#35c39a}
+.menu a .n{font-size:10px;color:#5d718a;width:18px;text-align:right;flex:0 0 auto}
+.menu a.active .n{color:#35c39a}
+.sidebar .foot{padding:14px 20px;font-size:11px;color:#5d718a;border-top:1px solid rgba(255,255,255,.08)}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.topbar .tt h1{font-size:17px;margin:0;letter-spacing:-.01em}
+.topbar .tt p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+.topbar .right{display:flex;align-items:center;gap:12px}
+.iconbtn{background:var(--white);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:12px;color:var(--slate);display:flex;align-items:center;gap:6px;position:relative}
+.iconbtn:hover{border-color:#cbd5e1}
+.badge{position:absolute;top:-6px;right:-6px;background:var(--neg);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700}
+.profile{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+
+.filterbar{background:var(--white);border-bottom:1px solid var(--line);padding:10px 22px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filterbar select,.filterbar input{font-family:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);background:var(--white)}
+.filterbar .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;background:var(--white);padding:7px 12px;font-size:12.5px;color:var(--slate)}
+.seg button.on{background:var(--navy);color:#fff}
+
+.content{flex:1;overflow-y:auto;padding:22px}
+.page{display:none}
+.page.on{display:block}
+
+/* ===== Components ===== */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.kpi .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.kpi .v{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.kpi .s{font-size:11px;color:var(--muted);margin-top:6px}
+.kpi .s b.up{color:var(--pos)} .kpi .s b.dn{color:var(--neg)}
+.kpi.accent{border-top:3px solid var(--blue)}
+.kpi.good{border-top:3px solid var(--pos)} .kpi.warn{border-top:3px solid var(--warn)} .kpi.bad{border-top:3px solid var(--neg)}
+
+.grid{display:grid;gap:16px;margin-bottom:20px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g23{grid-template-columns:2fr 1fr}.g32{grid-template-columns:1fr 2fr}
+@media(max-width:1000px){.g2,.g3,.g23,.g32{grid-template-columns:1fr}}
+
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.card h3{font-size:13.5px;margin:0 0 2px;letter-spacing:-.01em}
+.card .hint{font-size:11px;color:var(--muted);margin-bottom:12px}
+.chart{position:relative;height:260px}
+.chart.sm{height:220px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f8fafc}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.pill.pos{background:#e6f4ee;color:var(--pos)} .pill.warn{background:#fdf3dd;color:#9a6a00}
+.pill.neg{background:#fbeaec;color:var(--neg)} .pill.crit{background:#f3d9dd;color:var(--crit)}
+.pill.info{background:#e8eef7;color:var(--blue)} .pill.nodata{background:#eef1f5;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+/* Health legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--slate);margin-bottom:10px}
+.legend span{display:flex;align-items:center;gap:5px}
+
+/* Signal cards */
+.sigs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.sig{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:13px 15px;background:var(--white);box-shadow:var(--shadow);cursor:pointer}
+.sig.sev-warning{border-left-color:var(--warn)} .sig.sev-critical{border-left-color:var(--crit)} .sig.sev-info{border-left-color:var(--blue)}
+.sig .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sig .id{font-size:10.5px;color:var(--muted);font-weight:600}
+.sig .t{font-weight:700;font-size:13px;margin-bottom:4px}
+.sig .m{font-size:11.5px;color:var(--slate);margin-bottom:8px}
+.sig .foot{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Tree */
+.tree{font-size:12.5px}
+.tree .node{background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:4px 0;display:inline-block;font-weight:600}
+.tree .branch{margin-left:22px;border-left:2px solid var(--line);padding-left:16px}
+.tree .leaf{display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px dashed var(--line)}
+.tree .leaf b{font-weight:600}
+
+/* Drawer */
+.drawer{position:fixed;top:0;right:-440px;width:420px;max-width:92vw;height:100%;background:var(--white);box-shadow:-8px 0 30px rgba(11,31,51,.15);z-index:100;transition:right .28s ease;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer .head{background:var(--navy);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+.drawer .head button{background:none;border:none;color:#fff;font-size:20px}
+.drawer .body{flex:1;overflow-y:auto;padding:18px}
+.overlay{position:fixed;inset:0;background:rgba(11,31,51,.4);z-index:99;opacity:0;pointer-events:none;transition:opacity .28s}
+.overlay.show{opacity:1;pointer-events:auto}
+
+/* Matrix scatter note */
+.note{font-size:11px;color:var(--muted)}
+
+/* Dark mode */
+body.dark{--bg:#0f1720;--white:#16202c;--ink:#e7edf5;--line:#263244;--muted:#8fa0b3;--slate:#aebccd}
+body.dark .card,body.dark .topbar,body.dark .filterbar,body.dark .kpi,body.dark .sig{background:var(--white);border-color:var(--line)}
+body.dark tbody tr:hover{background:#1a2634}
+body.dark .tree .node{background:#1a2634;border-color:var(--line)}
+body.dark select,body.dark input,body.dark .iconbtn,body.dark .seg button{background:#1a2634;color:var(--ink);border-color:var(--line)}
+
+.exportbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.btn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600}
+.btn.ghost{background:var(--white);color:var(--navy);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="logo"><b>AEL CONTROL TOWER</b><span>Sales Intelligence · CI Research</span></div>
+    <nav class="menu" id="menu">
+      <div class="grp">Intelligence</div>
+      <a data-pg="overview" class="active"><span class="n">01</span>Executive Overview</a>
+      <a data-pg="sales"><span class="n">02</span>Sales Performance</a>
+      <a data-pg="geo"><span class="n">03</span>Geographic Intelligence</a>
+      <a data-pg="manpower"><span class="n">04</span>Manpower Intelligence</a>
+      <a data-pg="customer"><span class="n">05</span>Customer Intelligence</a>
+      <a data-pg="competitor"><span class="n">06</span>Competitor Intelligence</a>
+      <a data-pg="market"><span class="n">07</span>Market Intelligence</a>
+      <div class="grp">Diagnosis</div>
+      <a data-pg="signals"><span class="n">08</span>Sales Signal Center</a>
+      <a data-pg="rootcause"><span class="n">09</span>Root Cause Analysis</a>
+      <a data-pg="research"><span class="n">10</span>CI Research Queue</a>
+      <div class="grp">Decision</div>
+      <a data-pg="impact"><span class="n">11</span>Business Impact</a>
+      <a data-pg="action"><span class="n">12</span>Management Action</a>
+      <a data-pg="monitor"><span class="n">13</span>Impact Monitoring</a>
+      <a data-pg="quality"><span class="n">14</span>Data Quality</a>
+    </nav>
+    <div class="foot">Akij Essential (AEL) · v1.0 prototype<br/>Sample data — architecture ready for live integration</div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tt">
+        <h1>AEL SALES INTELLIGENCE CONTROL TOWER</h1>
+        <p>Sales Performance → Intelligence → Decision</p>
+      </div>
+      <div class="right">
+        <span class="iconbtn">📅 <span id="periodLabel">Sep 2026 · MTD</span></span>
+        <span class="iconbtn">↻ Updated: <span id="lastUpdated">16 Sep 2026</span></span>
+        <button class="iconbtn" id="notifBtn">🔔 Notifications<span class="badge" id="notifCount">3</span></button>
+        <button class="iconbtn" id="themeBtn">🌙</button>
+        <div class="profile" title="smgaffar">SG</div>
+      </div>
+    </div>
+
+    <div class="filterbar">
+      <span class="lbl">Month</span><select id="fMonth"></select>
+      <span class="lbl">View</span>
+      <div class="seg" id="fView"><button class="on" data-v="mtd">MTD</button><button data-v="ytd">YTD</button></div>
+      <span class="lbl">Zone</span><select id="fZone"><option value="">All Zones</option></select>
+      <span class="lbl">Region</span><select id="fRegion"><option value="">All Regions</option></select>
+      <span class="lbl">Product</span><select id="fProduct"><option value="">All Products</option></select>
+      <span class="lbl">Search</span><input id="fSearch" type="text" placeholder="Zone, region, employee, distributor, customer, signal…" style="width:260px"/>
+    </div>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- Overlay + Drawer -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer"><div class="head"><b id="drawerTitle">Zone</b><button onclick="App.closeDrawer()">×</button></div><div class="body" id="drawerBody"></div></div>
+
+<script>
+/* =====================================================================
+   DATA LAYER — realistic sample data (replace with CSV/API later)
+===================================================================== */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+const CUR = MONTHS.length - 1; // Sep index
+
+const ZONES = [
+  {id:'ZN-01', name:'Dhaka South',   lat:23.71, lng:90.41, target:[50,52,49,55,57,56,60,61,62], actual:[41,44,40,46,47,45,50,51,51]},
+  {id:'ZN-02', name:'Dhaka North',   lat:23.88, lng:90.41, target:[45,46,43,48,50,49,52,53,54], actual:[27,29,25,30,31,30,32,33,34]},
+  {id:'ZN-03', name:'Chittagong',    lat:22.35, lng:91.78, target:[40,41,39,43,44,43,46,47,48], actual:[26,27,25,28,29,28,30,31,31]},
+  {id:'ZN-04', name:'Khulna',        lat:22.85, lng:89.54, target:[35,36,34,38,39,38,40,41,42], actual:[20,21,19,22,22,21,23,23,24]},
+  {id:'ZN-05', name:'Rajshahi',      lat:24.37, lng:88.60, target:[20,21,19,22,23,22,23,24,24], actual:[ 8, 9, 8, 9,10, 9,10,10,10]},
+  {id:'ZN-06', name:'Sylhet',        lat:24.89, lng:91.87, target:[26,27,25,28,29,28,30,30,31], actual:[13,14,13,15,15,14,16,16,16]},
+  {id:'ZN-07', name:'Barisal',       lat:22.70, lng:90.35, target:[12,12,11,13,13,12,13,14,14], actual:[ 7, 7, 6, 7, 7, 7, 8, 8, 8]},
+  {id:'ZN-08', name:'Rangpur',       lat:25.75, lng:89.24, target:[14,14,13,15,15,14,15,16,16], actual:[ 7, 7, 6, 7, 7, 7, 8, 8, 8]},
+];
+
+const PRODUCTS = [
+  {name:'Rice',   target:74.7, actual:53.6},
+  {name:'Flour',  target:129.5, actual:78.3},
+  {name:'Dal',    target:10.1, actual:4.9},
+  {name:'Edible Oil', target:56.4, actual:28.0},
+  {name:'Salt',   target:21.3, actual:12.8},
+  {name:'Tea',    target:14.8, actual:1.6},
+  {name:'Spices', target:7.3, actual:2.7},
+];
+
+const EMPLOYEES = [
+  {name:'Md. Samim Shorwar', zone:'Dhaka South',   target:4.6, actual:3.8},
+  {name:'Md. Alamin Hasan',  zone:'Dhaka North',   target:4.4, actual:2.0},
+  {name:'Mohammad Masud',    zone:'Chittagong',    target:4.2, actual:2.7},
+  {name:'Md. Moaen Uddin',   zone:'Khulna',        target:4.0, actual:2.3},
+  {name:'Md. Eusuf Ali',     zone:'Rajshahi',      target:3.2, actual:1.2},
+  {name:'Ashraf Mia',        zone:'Sylhet',        target:3.8, actual:1.9},
+  {name:'Md. Shahin Alom',   zone:'Barisal',       target:2.2, actual:1.2},
+  {name:'Md. Babul Hossain', zone:'Rangpur',       target:2.4, actual:1.1},
+];
+
+const CUSTOMERS = [
+  {name:'M/s City Traders',      zone:'Dhaka South', sales:9.4, skus:18, freq:24},
+  {name:'M/s Bangla Enterprise', zone:'Dhaka South', sales:7.1, skus:14, freq:20},
+  {name:'M/s Chattala Store',    zone:'Chittagong',  sales:6.5, skus:15, freq:19},
+  {name:'M/s North Distribution',zone:'Dhaka North', sales:6.0, skus:13, freq:18},
+  {name:'M/s Khulna Traders',    zone:'Khulna',      sales:5.2, skus:12, freq:16},
+  {name:'M/s Sylhet Bazar',      zone:'Sylhet',      sales:3.8, skus:11, freq:14},
+  {name:'M/s Rajshahi Mart',     zone:'Rajshahi',    sales:2.6, skus:9,  freq:11},
+  {name:'M/s Padma Traders',     zone:'Barisal',     sales:2.1, skus:8,  freq:9},
+  {name:'M/s Teesta Store',      zone:'Rangpur',     sales:1.8, skus:7,  freq:8},
+];
+
+const COMPETITORS = [
+  {name:'Bashundhara', priceGap:-3, avail:82, dist:71, promo:'High',   pressure:0.76},
+  {name:'City Group',  priceGap:-5, avail:68, dist:58, promo:'Medium', pressure:0.58},
+  {name:'Square Food', priceGap:-2, avail:61, dist:52, promo:'Medium', pressure:0.44},
+  {name:'Pran',        priceGap:-7, avail:74, dist:64, promo:'High',   pressure:0.67},
+  {name:'Local mills', priceGap:-9, avail:57, dist:48, promo:'Low',    pressure:0.39},
+];
+
+const RESEARCH = [
+  {id:'RCH-011', signal:'SIG-0241', q:'What is driving the Mirpur/Dhaka North decline?', hypo:'Customer loss; distributor stock; competitor price', method:'Field research', owner:'R&I', deadline:'30 Sep', status:'In Progress'},
+  {id:'RCH-012', signal:'SIG-0248', q:'Why is Rajshahi achievement persistently low?', hypo:'Coverage gap; manpower productivity', method:'Coverage audit', owner:'R&I', deadline:'28 Sep', status:'Open'},
+  {id:'RCH-013', signal:'SIG-0255', q:'Is competitor pricing undercutting AEL in Sylhet?', hypo:'Price gap vs Bashundhara', method:'Price audit', owner:'CI', deadline:'05 Oct', status:'Open'},
+];
+
+const ACTIONS = [
+  {issue:'Rajshahi route-to-market gap', action:'Restructure distributor + add SR', owner:'Sales Head', deadline:'15 Oct', impact:'+8 pp', status:'In Progress'},
+  {issue:'Tea category underperformance', action:'Category pricing & promotion review', owner:'Marketing', deadline:'30 Sep', impact:'+12 pp', status:'Open'},
+  {issue:'Dhaka North coverage decline', action:'Redeploy 2 SR + beat redesign', owner:'ZSM Dhaka', deadline:'20 Sep', impact:'+6 pp', status:'Overdue'},
+];
+
+const MONITORING = [
+  {zone:'Khulna', before:54, after:63, action:'Distributor restructuring', status:'Improved'},
+  {zone:'Chittagong', before:61, after:64, action:'Added SR coverage', status:'Improved'},
+  {zone:'Sylhet', before:49, after:51, action:'Promotion support', status:'Monitoring'},
+  {zone:'Rajshahi', before:41, after:42, action:'Coverage audit', status:'No change'},
+];
+
+/* =====================================================================
+   CONFIG — weights & thresholds (editable)
+===================================================================== */
+const CFG = {
+  perfThreshold: 0.60,      // achievement below this flags underperformance
+  persistenceMonths: 2,     // consecutive months to flag persistence
+  criticalThreshold: 0.45,  // critical achievement
+  health:{performance:0.40, trend:0.20, persistence:0.20, volatility:0.20},
+};
+const COLORS = {healthy:'#16845B', watch:'#D99A00', risk:'#E8833A', critical:'#C83E4D', nodata:'#94a3b8'};
+
+/* =====================================================================
+   UTILS
+===================================================================== */
+const sum = a => a.reduce((x,y)=>x+y,0);
+const fmtCr = v => v.toFixed(1) + ' Cr';
+const fmtPct = v => (v*100).toFixed(1) + '%';
+const pct = (a,t) => t>0 ? a/t : 0;
+
+function zoneMetrics(z){
+  const t = sum(z.target), a = sum(z.actual);
+  const cur = pct(z.actual[CUR], z.target[CUR]);
+  const prev = pct(z.actual[CUR-1], z.target[CUR-1]);
+  const mom = z.actual[CUR-1]>0 ? (z.actual[CUR]-z.actual[CUR-1])/z.actual[CUR-1] : 0;
+  let persistence = 0;
+  for(let i=CUR;i>=0;i--){ if(pct(z.actual[i],z.target[i]) < CFG.perfThreshold) persistence++; else break; }
+  // volatility = std of monthly achievement
+  const achvs = z.target.map((t,i)=>pct(z.actual[i],t));
+  const mean = sum(achvs)/achvs.length;
+  const vol = Math.sqrt(sum(achvs.map(x=>(x-mean)**2))/achvs.length);
+  return {totalTarget:t, totalActual:a, achv:pct(a,t), cur, prev, mom, persistence, volatility:vol, gap:t-a};
+}
+
+function health(z){
+  const m = zoneMetrics(z);
+  let score = 0;
+  score += (m.achv) * CFG.health.performance;
+  score += (0.5 + m.mom*2) * CFG.health.trend;
+  score += (1 - Math.min(m.persistence/4,1)) * CFG.health.persistence;
+  score += (1 - Math.min(m.volatility/0.2,1)) * CFG.health.volatility;
+  if(m.achv >= 0.70) return {level:'Healthy', color:COLORS.healthy, score};
+  if(m.achv >= 0.55) return {level:'Watch', color:COLORS.watch, score};
+  if(m.achv >= 0.45) return {level:'At Risk', color:COLORS.risk, score};
+  return {level:'Critical', color:COLORS.critical, score};
+}
+
+function buildSignals(){
+  const sigs = [];
+  let n = 1;
+  ZONES.forEach(z=>{
+    const m = zoneMetrics(z);
+    if(m.achv < CFG.criticalThreshold){
+      sigs.push({id:'SIG-'+String(240+n++).padStart(2,'0'), type:'Performance', sev:'critical', zone:z.name, title:'Persistent critical underachievement', metric:'Achievement', cur:fmtPct(m.achv), prev:fmtPct(m.prev), dev:(m.cur-m.prev)*100, pers:m.persistence, impact:(m.gap*0.6).toFixed(1)+' Cr', status:'Research Required'});
+    } else if(m.persistence >= CFG.persistenceMonths){
+      sigs.push({id:'SIG-'+String(240+n++).padStart(2,'0'), type:'Performance', sev:'warning', zone:z.name, title:'Persistent sales decline', metric:'Achievement', cur:fmtPct(m.achv), prev:fmtPct(m.prev), dev:(m.cur-m.prev)*100, pers:m.persistence, impact:(m.gap*0.5).toFixed(1)+' Cr', status:'Research Required'});
+    }
+    if(m.mom < -0.08){
+      sigs.push({id:'SIG-'+String(240+n++).padStart(2,'0'), type:'Performance', sev:'warning', zone:z.name, title:'Sudden sales decline (MoM)', metric:'MoM', cur:(m.mom*100).toFixed(1)+'%', prev:'—', dev:(m.mom*100), pers:1, impact:(m.gap*0.3).toFixed(1)+' Cr', status:'Monitor'});
+    }
+  });
+  // top concentration / dependency signals (sample)
+  sigs.push({id:'SIG-0255', type:'Customer', sev:'warning', zone:'Sylhet', title:'Distributor dependency', metric:'Top cust. share', cur:'48%', prev:'39%', dev:9, pers:3, impact:'2.8 Cr', status:'Research Required'});
+  sigs.push({id:'SIG-0256', type:'Competitor', sev:'warning', zone:'Chittagong', title:'Competitor price pressure', metric:'Price gap', cur:'-5%', prev:'-2%', dev:-3, pers:2, impact:'3.1 Cr', status:'Research Required'});
+  sigs.push({id:'SIG-0257', type:'Manpower', sev:'info', zone:'Rajshahi', title:'Employee productivity issue', metric:'Productivity', cur:'62%', prev:'66%', dev:-4, pers:2, impact:'1.2 Cr', status:'Monitor'});
+  return sigs;
+}
+
+const SIGNALS = buildSignals();
+function criticalCount(){ return SIGNALS.filter(s=>s.sev==='critical').length; }
+function researchCount(){ return RESEARCH.filter(r=>r.status!=='Closed').length; }
+function overdueCount(){ return ACTIONS.filter(a=>a.status==='Overdue').length; }
+
+/* =====================================================================
+   APP STATE & NAV
+===================================================================== */
+const App = {
+  page:'overview', filters:{month:CUR, view:'mtd', zone:'', region:'', product:''},
+  charts:{},
+  map:null, markers:[],
+  selectedZone:null,
+
+  nav(pg){
+    this.page = pg;
+    document.querySelectorAll('#menu a').forEach(a=>a.classList.toggle('active', a.dataset.pg===pg));
+    this.render();
+  },
+  render(){
+    document.getElementById('content').innerHTML = PAGES[this.page]();
+    this.afterRender();
+  },
+  afterRender(){
+    if(this.page==='overview'){ this.drawTrend(); this.drawGap(); this.initMap(); this.drawCategory(); }
+    if(this.page==='sales'){ this.drawTrend(); }
+    if(this.page==='signals'){ this.drawPriority(); }
+    if(this.page==='customer'){ this.drawPareto(); }
+    if(this.page==='manpower'){ this.drawProductivity(); }
+    if(this.page==='market'){ this.drawMarket(); }
+    if(this.page==='geo'){ this.initMap(); }
+  },
+  openZone(z){
+    this.selectedZone = z; this.openDrawer(z.name, ZONE_DRAWER(z));
+  },
+  openSignal(s){
+    this.openDrawer('Signal ' + s.id, SIGNAL_DRAWER(s));
+  },
+  openDrawer(title, body){
+    document.getElementById('drawerTitle').textContent = title;
+    document.getElementById('drawerBody').innerHTML = body;
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  },
+  closeDrawer(){
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  },
+  downloadCSV(){
+    const rows = [['Zone','Target (Cr)','Actual (Cr)','Achievement','Gap (Cr)']];
+    ZONES.forEach(z=>{ const m=zoneMetrics(z); rows.push([z.name, m.totalTarget.toFixed(1), m.totalActual.toFixed(1), (m.achv*100).toFixed(1)+'%', m.gap.toFixed(1)]); });
+    const csv = rows.map(r=>r.join(',')).join('\n');
+    const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='AEL_sales_performance.csv'; a.click();
+  },
+  toggleTheme(){
+    document.body.classList.toggle('dark');
+    document.getElementById('themeBtn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  }
+};
+
+/* =====================================================================
+   CHARTS
+===================================================================== */
+function baseOpts(){ return {responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{usePointStyle:true, boxWidth:8, font:{size:11}}}}, scales:{x:{grid:{display:false}}, y:{grid:{color:'#eef1f5'}}}}; }
+
+App.drawTrend = function(){
+  const el = document.getElementById('trendChart'); if(!el) return;
+  const natT = MONTHS.map((_,i)=>sum(ZONES.map(z=>z.target[i])));
+  const natA = MONTHS.map((_,i)=>sum(ZONES.map(z=>z.actual[i])));
+  if(this.charts.trend) this.charts.trend.destroy();
+  this.charts.trend = new Chart(el, {data:{labels:MONTHS, datasets:[
+    {type:'bar', label:'Target', data:natT, backgroundColor:'rgba(18,59,93,.20)', borderColor:'#123B5D', borderWidth:1, borderRadius:4, order:2},
+    {type:'line', label:'Actual', data:natA, borderColor:'#16845B', backgroundColor:'#16845B', tension:.35, pointRadius:3, order:1}
+  ]}, options:{...baseOpts(), scales:{...baseOpts().scales, y:{...baseOpts().scales.y, title:{display:true, text:'BDT crore', font:{size:10}}}}}});
+};
+
+App.drawGap = function(){
+  const el = document.getElementById('gapChart'); if(!el) return;
+  const zs = ZONES.map(z=>({z, m:zoneMetrics(z)})).sort((a,b)=>b.m.gap-a.m.gap);
+  if(this.charts.gap) this.charts.gap.destroy();
+  this.charts.gap = new Chart(el, {type:'bar', data:{labels:zs.map(x=>x.z.name), datasets:[
+    {label:'Sales Gap (Cr)', data:zs.map(x=>x.m.gap), backgroundColor:zs.map(x=>x.m.gap>10?'#C83E4D':'#D99A00'), borderRadius:4}
+  ]}, options:{...baseOpts(), indexAxis:'y'}});
+};
+
+App.drawCategory = function(){
+  const el = document.getElementById('catChart'); if(!el) return;
+  if(this.charts.cat) this.charts.cat.destroy();
+  this.charts.cat = new Chart(el, {type:'bar', data:{labels:PRODUCTS.map(p=>p.name), datasets:[
+    {label:'Target', data:PRODUCTS.map(p=>p.target), backgroundColor:'rgba(18,59,93,.20)', borderColor:'#123B5D', borderWidth:1, borderRadius:4},
+    {label:'Actual', data:PRODUCTS.map(p=>p.actual), backgroundColor:'#16845B', borderRadius:4}
+  ]}, options:baseOpts()});
+};
+
+App.drawPriority = function(){
+  const el = document.getElementById('priorityChart'); if(!el) return;
+  const crit = SIGNALS.filter(s=>s.sev==='critical');
+  const warn = SIGNALS.filter(s=>s.sev==='warning');
+  const info = SIGNALS.filter(s=>s.sev==='info');
+  const mk = (list,color)=>({label:'', data:list.map((s,i)=>({x: i%4*25+10, y: list.length<2?50: 20+ (i/list.length)*70})), backgroundColor:color, pointRadius:7, pointHoverRadius:9});
+  if(this.charts.prio) this.charts.prio.destroy();
+  this.charts.prio = new Chart(el, {type:'scatter', data:{datasets:[mk(crit,'#C83E4D'), mk(warn,'#D99A00'), mk(info,'#123B5D')]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{x:{min:0,max:100,title:{display:true,text:'Evidence / Uncertainty →'}}, y:{min:0,max:100,title:{display:true,text:'Business Impact →'}}}}});
+};
+
+App.drawPareto = function(){
+  const el = document.getElementById('paretoChart'); if(!el) return;
+  const sorted = [...CUSTOMERS].sort((a,b)=>b.sales-a.sales);
+  const tot = sum(sorted.map(c=>c.sales));
+  let run=0; const cum = sorted.map(c=>{ run+=c.sales; return run/tot*100; });
+  if(this.charts.pareto) this.charts.pareto.destroy();
+  this.charts.pareto = new Chart(el, {data:{labels:sorted.map(c=>c.name.split(' ')[1]), datasets:[
+    {type:'bar', label:'Sales (Cr)', data:sorted.map(c=>c.sales), backgroundColor:'#123B5D', borderRadius:4, yAxisID:'y'},
+    {type:'line', label:'Cumulative %', data:cum, borderColor:'#C83E4D', tension:.3, pointRadius:2, yAxisID:'y1'}
+  ]}, options:{responsive:true, maintainAspectRatio:false, scales:{y:{position:'left', title:{display:true,text:'Cr'}}, y1:{position:'right', min:0,max:100, grid:{drawOnChartArea:false}, title:{display:true,text:'%'}}, x:{grid:{display:false}}}}});
+};
+
+App.drawProductivity = function(){
+  const el = document.getElementById('prodChart'); if(!el) return;
+  if(this.charts.prod) this.charts.prod.destroy();
+  this.charts.prod = new Chart(el, {type:'scatter', data:{datasets:[
+    {label:'Employees', data:EMPLOYEES.map(e=>({x:e.target, y:pct(e.actual,e.target)*100})), backgroundColor:EMPLOYEES.map(e=>pct(e.actual,e.target)<0.6?'#C83E4D':'#16845B'), pointRadius:8}
+  ]}, options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, annotation:false},
+    scales:{x:{title:{display:true,text:'Target per employee (Cr)'}}, y:{min:0, max:100, title:{display:true,text:'Achievement %'}}}}});
+};
+
+App.drawMarket = function(){
+  const el = document.getElementById('marketChart'); if(!el) return;
+  if(this.charts.market) this.charts.market.destroy();
+  this.charts.market = new Chart(el, {data:{labels:MONTHS, datasets:[
+    {label:'Market demand index', data:[100,102,101,105,107,106,109,110,112], borderColor:'#123B5D', tension:.3, pointRadius:3},
+    {label:'Market price index', data:[100,101,103,104,106,108,107,108,110], borderColor:'#D99A00', tension:.3, pointRadius:3},
+    {label:'AEL volume index', data:[100,96,92,90,93,95,97,99,101], borderColor:'#16845B', tension:.3, pointRadius:3}
+  ]}, options:baseOpts()});
+};
+
+/* =====================================================================
+   MAP (Leaflet)
+===================================================================== */
+App.initMap = function(){
+  const el = document.getElementById('zoneMap'); if(!el) return;
+  if(this.map){ setTimeout(()=>this.map.invalidateSize(),50); return; }
+  this.map = L.map(el, {scrollWheelZoom:false}).setView([23.7,90.4],6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap © CARTO', maxZoom:12}).addTo(this.map);
+  this.refreshMarkers();
+};
+App.refreshMarkers = function(){
+  if(!this.map) return;
+  this.markers.forEach(m=>this.map.removeLayer(m)); this.markers=[];
+  ZONES.forEach(z=>{
+    const h = health(z); const m = zoneMetrics(z);
+    const mk = L.circleMarker([z.lat,z.lng], {radius: 8 + m.totalActual/12, color:h.color, weight:2, fillColor:h.color, fillOpacity:0.75});
+    mk.bindTooltip(`<b>${z.name}</b><br/>${h.level} · ${fmtPct(m.achv)}`);
+    mk.on('click', ()=>this.openZone(z));
+    mk.addTo(this.map); this.markers.push(mk);
+  });
+  // legend
+  const leg = L.control({position:'bottomright'});
+  leg.onAdd = function(){ const d=L.DomUtil.create('div','legend'); d.style.cssText='background:#fff;padding:8px 12px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.15);font:12px Inter,sans-serif;line-height:1.6';
+    const hc = [['Healthy',COLORS.healthy],['Watch',COLORS.watch],['At Risk',COLORS.risk],['Critical',COLORS.critical]];
+    d.innerHTML = hc.map(p=>`<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p[1]};margin-right:6px"></span>${p[0]}</span>`).join('<br/>');
+    return d; };
+  leg.addTo(this.map);
+};
+
+/* =====================================================================
+   PAGES
+===================================================================== */
+function scoreboard(){
+  const natT = sum(ZONES.map(z=>sum(z.target))), natA = sum(ZONES.map(z=>sum(z.actual)));
+  const rows = [
+    ['Sales', fmtCr(natA), fmtCr(natA*0.93), '↑ +2.1%', 'pos'],
+    ['Achievement', fmtPct(pct(natA,natT)), fmtPct(pct(natA,natT)-0.03), '↑ +3 pp', 'pos'],
+    ['Sales Gap', fmtCr(natT-natA), fmtCr((natT-natA)*1.04), '↑ widening', 'neg'],
+    ['Active Customers', '1,284', '1,230', '↑ +54', 'pos'],
+    ['Employee Productivity', '61%', '58%', '↑ +3 pp', 'pos'],
+    ['Critical Signals', criticalCount(), criticalCount()-1, '↑ +1', 'neg'],
+  ];
+  return `<table><thead><tr><th>KPI</th><th class="num">Current</th><th class="num">Previous</th><th class="num">Change</th><th>Status</th></tr></thead>
+  <tbody>${rows.map(r=>`<tr><td><b>${r[0]}</b></td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td><td><span class="pill ${r[4]==='pos'?'pos':r[4]==='neg'?'neg':'warn'}">${r[4]==='pos'?'Improving':r[4]==='neg'?'Deteriorating':'Stable'}</span></td></tr>`).join('')}</tbody></table>`;
+}
+
+function managementSummary(){
+  const natT = sum(ZONES.map(z=>sum(z.target))), natA = sum(ZONES.map(z=>sum(z.actual)));
+  const achv = pct(natA,natT);
+  const below = ZONES.filter(z=>zoneMetrics(z).achv < CFG.perfThreshold).length;
+  const worst = [...ZONES].sort((a,b)=>zoneMetrics(a).achv-zoneMetrics(b).achv)[0];
+  return `<div style="background:var(--navy);color:#e7edf5;border-radius:var(--radius);padding:18px 20px;line-height:1.7">
+    <div style="font-size:11px;letter-spacing:.1em;color:#7c93ab;text-transform:uppercase;margin-bottom:6px">Management Intelligence Summary</div>
+    National achievement is <b style="color:#35c39a">${fmtPct(achv)}</b>, with a sales gap of <b>${fmtCr(natT-natA)}</b>.
+    <b>${below}</b> of ${ZONES.length} zones are below the ${(CFG.perfThreshold*100)}% performance threshold.
+    The largest contribution to the national gap comes from <b>${worst.name}</b>.
+    <b>${criticalCount()}</b> critical and <b>${SIGNALS.length-criticalCount()}</b> other signals require attention.
+    <b>${researchCount()}</b> research cases are open and <b>${overdueCount()}</b> actions are overdue.
+  </div>`;
+}
+
+const PAGES = {
+  overview(){
+    const natT = sum(ZONES.map(z=>sum(z.target))), natA = sum(ZONES.map(z=>sum(z.actual)));
+    return `
+    <div class="kpis">
+      <div class="kpi accent"><div class="l">Actual Sales</div><div class="v">${fmtCr(natA)}</div><div class="s">National · ${MONTHS[CUR]} 2026</div></div>
+      <div class="kpi"><div class="l">Target Sales</div><div class="v">${fmtCr(natT)}</div><div class="s">National target</div></div>
+      <div class="kpi good"><div class="l">Achievement</div><div class="v">${fmtPct(pct(natA,natT))}</div><div class="s">Actual / Target</div></div>
+      <div class="kpi warn"><div class="l">Sales Gap</div><div class="v">${fmtCr(natT-natA)}</div><div class="s">Target − Actual</div></div>
+      <div class="kpi bad"><div class="l">Active Signals</div><div class="v">${SIGNALS.length}</div><div class="s">${criticalCount()} critical</div></div>
+      <div class="kpi"><div class="l">Research Queue</div><div class="v">${researchCount()}</div><div class="s">Open CI/R&I cases</div></div>
+      <div class="kpi warn"><div class="l">Actions Overdue</div><div class="v">${overdueCount()}</div><div class="s">Past deadline</div></div>
+    </div>
+    ${managementSummary()}
+    <div class="grid g23" style="margin-top:16px">
+      <div class="card"><h3>National Sales Trend</h3><div class="hint">Target vs Actual (BDT crore)</div><div class="chart"><canvas id="trendChart"></canvas></div></div>
+      <div class="card"><h3>Management Scoreboard</h3><div class="hint">Current vs previous period</div>${scoreboard()}</div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Zone Health Map</h3><div class="hint">Click a zone for its intelligence drawer</div>
+        <div class="legend"><span><i class="dot" style="background:var(--healthy)"></i>Healthy</span><span><i class="dot" style="background:var(--watch)"></i>Watch</span><span><i class="dot" style="background:var(--risk)"></i>At Risk</span><span><i class="dot" style="background:var(--critical)"></i>Critical</span></div>
+        <div id="zoneMap" style="height:340px;border-radius:10px"></div></div>
+      <div class="card"><h3>Sales Gap Decomposition</h3><div class="hint">Where is the national gap coming from?</div><div class="chart"><canvas id="gapChart"></canvas></div></div>
+    </div>`;
+  },
+
+  sales(){
+    return `
+    <div class="exportbar"><button class="btn" onclick="App.downloadCSV()">⬇ Export CSV</button><button class="btn ghost" onclick="window.print()">🖨 Print</button></div>
+    <div class="card"><h3>Sales Performance Table</h3><div class="hint">Zone · Target · Actual · Gap · Achievement · MoM · Persistence · Health</div>
+      <table><thead><tr><th>Zone</th><th class="num">Target (Cr)</th><th class="num">Actual (Cr)</th><th class="num">Gap (Cr)</th><th class="num">Achv</th><th class="num">MoM</th><th class="num">Persistence</th><th>Health</th></tr></thead>
+      <tbody>${ZONES.map(z=>{ const m=zoneMetrics(z), h=health(z);
+        return `<tr onclick="App.openZone(ZONES.find(x=>x.name==='${z.name}'))" style="cursor:pointer"><td><b>${z.name}</b></td><td class="num">${m.totalTarget.toFixed(1)}</td><td class="num">${m.totalActual.toFixed(1)}</td><td class="num">${m.gap.toFixed(1)}</td><td class="num"><b>${fmtPct(m.achv)}</b></td><td class="num">${(m.mom*100).toFixed(1)}%</td><td class="num">${m.persistence} mo</td><td><span class="pill" style="background:${h.color}22;color:${h.color}">${h.level}</span></td></tr>`; }).join('')}</tbody></table>
+    </div>`;
+  },
+
+  geo(){
+    return `<div class="card"><h3>Geographic Intelligence</h3><div class="hint">Zone → Region → Territory drill-down · click a zone</div>
+      <div class="legend"><span><i class="dot" style="background:var(--healthy)"></i>Healthy</span><span><i class="dot" style="background:var(--watch)"></i>Watch</span><span><i class="dot" style="background:var(--risk)"></i>At Risk</span><span><i class="dot" style="background:var(--critical)"></i>Critical</span></div>
+      <div id="zoneMap" style="height:440px;border-radius:10px"></div></div>`;
+  },
+
+  manpower(){
+    return `<div class="grid g2">
+      <div class="card"><h3>Employee Productivity Matrix</h3><div class="hint">X: target · Y: achievement % (red = &lt;60%)</div><div class="chart"><canvas id="prodChart"></canvas></div></div>
+      <div class="card"><h3>Manpower Signals</h3><div class="hint">Low productivity & dependency</div>
+        <table><thead><tr><th>Employee</th><th>Zone</th><th class="num">Target</th><th class="num">Actual</th><th class="num">Achv</th></tr></thead>
+        <tbody>${EMPLOYEES.map(e=>{const a=pct(e.actual,e.target); return `<tr><td>${e.name}</td><td>${e.zone}</td><td class="num">${e.target}</td><td class="num">${e.actual}</td><td class="num"><span class="pill ${a<0.5?'crit':a<0.6?'neg':'pos'}">${(a*100).toFixed(0)}%</span></td></tr>`;}).join('')}</tbody></table>
+      </div></div>`;
+  },
+
+  customer(){
+    return `<div class="grid g2">
+      <div class="card"><h3>Customer Pareto Analysis</h3><div class="hint">Sales contribution & concentration risk</div><div class="chart"><canvas id="paretoChart"></canvas></div></div>
+      <div class="card"><h3>Top Customers</h3><div class="hint">Concentration & purchase behaviour</div>
+        <table><thead><tr><th>Customer</th><th>Zone</th><th class="num">Sales (Cr)</th><th class="num">SKUs</th><th class="num">Freq</th></tr></thead>
+        <tbody>${CUSTOMERS.map(c=>`<tr><td>${c.name}</td><td>${c.zone}</td><td class="num">${c.sales}</td><td class="num">${c.skus}</td><td class="num">${c.freq}</td></tr>`).join('')}</tbody></table>
+      </div></div>`;
+  },
+
+  competitor(){
+    const pressure = c=> c.pressure>=0.6 ? 'neg' : (c.pressure>=0.4?'warn':'pos');
+    return `<div class="card"><h3>Competitor Intelligence</h3><div class="hint">Price gap vs AEL, availability, distribution & pressure (configurable logic)</div>
+      <table><thead><tr><th>Competitor</th><th class="num">Price Gap %</th><th class="num">Availability</th><th class="num">Distribution</th><th>Promo</th><th class="num">Pressure</th><th>Status</th></tr></thead>
+      <tbody>${COMPETITORS.map(c=>`<tr><td><b>${c.name}</b></td><td class="num">${c.priceGap}%</td><td class="num">${c.avail}%</td><td class="num">${c.dist}%</td><td>${c.promo}</td><td class="num">${(c.pressure*100).toFixed(0)}%</td><td><span class="pill ${pressure(c)}">${c.pressure>=0.6?'High':c.pressure>=0.4?'Medium':'Low'}</span></td></tr>`).join('')}</tbody></table></div>`;
+  },
+
+  market(){
+    return `<div class="grid g2">
+      <div class="card"><h3>Market Trend</h3><div class="hint">Demand, price & AEL volume index</div><div class="chart"><canvas id="marketChart"></canvas></div></div>
+      <div class="card"><h3>Market Signals</h3><div class="hint">External demand / supply / price</div>
+        ${['Seasonal demand shift in Q3','Input (wheat/rice) price rising','Competitor promo activity increasing','Monsoon supply disruption risk'].map((s,i)=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="pill ${i<2?'warn':'info'}">${i<2?'Warning':'Info'}</span> ${s}</div>`).join('')}
+      </div></div>`;
+  },
+
+  signals(){
+    const sev = {critical:'Critical', warning:'Warning', info:'Info'};
+    return `<div class="grid g23">
+      <div class="card"><h3>Sales Signal Center</h3><div class="hint">Auto-generated exception signals from data patterns</div>
+        <div class="sigs">${SIGNALS.map(s=>`<div class="sig sev-${s.sev}" onclick="App.openSignal(SIGNALS.find(x=>x.id==='${s.id}'))">
+          <div class="top"><span class="id">${s.id} · ${s.type}</span><span class="pill ${s.sev==='critical'?'crit':s.sev==='warning'?'warn':'info'}">${sev[s.sev]}</span></div>
+          <div class="t">${s.title}</div>
+          <div class="m">${s.zone} · ${s.metric} ${s.cur} (prev ${s.prev}) · persistence ${s.pers} mo</div>
+          <div class="foot"><span class="pill info">Impact ${s.impact}</span><span class="pill warn">${s.status}</span></div>
+        </div>`).join('')}</div></div>
+      <div class="card"><h3>Priority Matrix</h3><div class="hint">Business impact vs evidence/uncertainty</div><div class="chart"><canvas id="priorityChart"></canvas></div></div>
+    </div>`;
+  },
+
+  rootcause(){
+    return `<div class="card"><h3>Root Cause Analysis</h3><div class="hint">Drill from sales gap to root cause · categories: Internal / External / Structural</div>
+    <div class="tree">
+      <div class="node">SALES GAP — ${fmtCr(sum(ZONES.map(z=>zoneMetrics(z).gap)))}</div>
+      <div class="branch">
+        <div class="node">GEOGRAPHY</div>
+        <div class="branch">
+          ${ZONES.map(z=>{const m=zoneMetrics(z); return `<div class="leaf"><span>${z.name}</span><b>${fmtCr(m.gap)} · ${fmtPct(m.achv)}</b></div>`;}).join('')}
+        </div>
+        <div class="node">DRIVERS</div>
+        <div class="branch">
+          <div class="leaf"><span>Distributor / coverage</span><b>36%</b></div>
+          <div class="leaf"><span>Customer activity</span><b>24%</b></div>
+          <div class="leaf"><span>Competitor price</span><b>18%</b></div>
+          <div class="leaf"><span>Product / price</span><b>12%</b></div>
+          <div class="leaf"><span>Market demand</span><b>10%</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:12px">⚠ Hypotheses shown above are <b>unvalidated</b> — they require field evidence before being treated as confirmed root causes.</div>
+    </div>`;
+  },
+
+  research(){
+    return `<div class="card"><h3>CI Research Queue</h3><div class="hint">Sales signals → business question → hypothesis → evidence → method → owner</div>
+      <table><thead><tr><th>ID</th><th>Signal</th><th>Business Question</th><th>Method</th><th>Owner</th><th>Deadline</th><th>Status</th></tr></thead>
+      <tbody>${RESEARCH.map(r=>`<tr><td>${r.id}</td><td><span class="pill info">${r.signal}</span></td><td>${r.q}</td><td>${r.method}</td><td>${r.owner}</td><td>${r.deadline}</td><td><span class="pill ${r.status==='In Progress'?'warn':'info'}">${r.status}</span></td></tr>`).join('')}</tbody></table>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Evidence Triangulation</h3><div class="hint">Sources & confidence — never present unvalidated hypothesis as root cause</div>
+      <table><thead><tr><th>Finding</th><th>Sources</th><th class="num">Count</th><th>Confidence</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Rajshahi coverage gap confirmed</td><td>Field observation, SR audit</td><td class="num">2</td><td><span class="pill pos">High</span></td><td>Validated</td></tr>
+        <tr><td>Sylhet competitor price advantage</td><td>Price audit, retailer</td><td class="num">2</td><td><span class="pill warn">Medium</span></td><td>Validating</td></tr>
+        <tr><td>Dhaka North customer loss</td><td>Retailer interview</td><td class="num">1</td><td><span class="pill neg">Low</span></td><td>Unvalidated</td></tr>
+      </tbody></table></div>`;
+  },
+
+  impact(){
+    return `<div class="kpis">
+      <div class="kpi bad"><div class="l">Sales Loss</div><div class="v">${fmtCr(sum(ZONES.map(z=>zoneMetrics(z).gap)*0.55))}</div><div class="s">Estimated at-risk revenue</div></div>
+      <div class="kpi good"><div class="l">Recovery Opportunity</div><div class="v">${fmtCr(sum(ZONES.map(z=>zoneMetrics(z).gap)*0.7))}</div><div class="s">If gaps close to 80%</div></div>
+      <div class="kpi warn"><div class="l">Customer Value at Risk</div><div class="v">${fmtCr(sum(ZONES.map(z=>zoneMetrics(z).gap)*0.25))}</div><div class="s">Top-customer exposure</div></div>
+    </div>
+    <div class="card"><h3>Business Impact by Signal</h3><div class="hint">Signal → root cause → affected sales → financial impact → recovery</div>
+      <table><thead><tr><th>Signal</th><th>Root Cause</th><th class="num">Affected Sales</th><th class="num">Est. Impact</th><th class="num">Recovery Opp.</th></tr></thead>
+      <tbody>${SIGNALS.slice(0,7).map((s,i)=>`<tr><td><span class="pill info">${s.id}</span></td><td>${['Coverage','Distributor','Customer','Competitor','Manpower','Product','Market'][i]}</td><td class="num">${(3.2+(i%5)*1.1).toFixed(1)} Cr</td><td class="num">${s.impact}</td><td class="num">${(parseFloat(s.impact)*0.7).toFixed(1)} Cr</td></tr>`).join('')}</tbody></table></div>`;
+  },
+
+  action(){
+    return `<div class="card"><h3>Management Action Tracker</h3><div class="hint">Issue → action → owner → deadline → expected impact → status</div>
+      <table><thead><tr><th>Issue</th><th>Action</th><th>Owner</th><th>Deadline</th><th class="num">Expected Impact</th><th>Status</th></tr></thead>
+      <tbody>${ACTIONS.map(a=>`<tr><td>${a.issue}</td><td>${a.action}</td><td>${a.owner}</td><td>${a.deadline}</td><td class="num">${a.impact}</td><td><span class="pill ${a.status==='Overdue'?'crit':a.status==='In Progress'?'warn':'info'}">${a.status}</span></td></tr>`).join('')}</tbody></table></div>`;
+  },
+
+  monitor(){
+    const cls = s=> s==='Improved'?'pos':(s==='Monitoring'?'warn':'neg');
+    return `<div class="card"><h3>Impact Monitoring</h3><div class="hint">Before action → after action → observed impact (no unproven causality claims)</div>
+      <table><thead><tr><th>Zone</th><th class="num">Achievement Before</th><th>Action</th><th class="num">Achievement After</th><th class="num">Change</th><th>Outcome</th></tr></thead>
+      <tbody>${MONITORING.map(m=>{const d=m.after-m.before; return `<tr><td><b>${m.zone}</b></td><td class="num">${m.before}%</td><td>${m.action}</td><td class="num">${m.after}%</td><td class="num" style="color:${d>=0?'var(--pos)':'var(--neg)'}">${d>=0?'+':''}${d} pp</td><td><span class="pill ${cls(m.status)}">${m.status}</span></td></tr>`;}).join('')}</tbody></table></div>`;
+  },
+
+  quality(){
+    const items = [
+      ['Total Records','18,432','—','—'],
+      ['Valid Records','17,910','97.2%','pos'],
+      ['Missing Records','412','2.2%','warn'],
+      ['Duplicate Records','78','0.4%','warn'],
+      ['Invalid Values','32','0.2%','warn'],
+      ['Missing Target Mapping','61','0.3%','neg'],
+      ['Missing Employee Mapping','24','0.1%','neg'],
+    ];
+    const score = 94;
+    return `<div class="kpis">
+      <div class="kpi good"><div class="l">Data Quality Score</div><div class="v">${score}/100</div><div class="s">Transparent formula: valid / total</div></div>
+      <div class="kpi"><div class="l">Last Refresh</div><div class="v" style="font-size:18px">16 Sep 2026</div><div class="s">Daily ERP sync</div></div>
+    </div>
+    <div class="card"><h3>Data Validation</h3><div class="hint">Records, validity & mapping completeness</div>
+      <table><thead><tr><th>Check</th><th class="num">Count</th><th class="num">Rate</th><th>Status</th></tr></thead>
+      <tbody>${items.map(i=>`<tr><td>${i[0]}</td><td class="num">${i[1]}</td><td class="num">${i[2]}</td><td><span class="pill ${i[3]}">${i[3]==='pos'?'OK':i[3]==='warn'?'Review':'Fix'}</span></td></tr>`).join('')}</tbody></table></div>`;
+  },
+};
+
+/* =====================================================================
+   DRAWERS
+===================================================================== */
+function ZONE_DRAWER(z){
+  const m = zoneMetrics(z), h = health(z);
+  return `<div style="margin-bottom:14px"><span class="pill" style="background:${h.color}22;color:${h.color};font-size:12px;padding:4px 12px">${h.level.toUpperCase()}</span></div>
+  <div class="kpis" style="grid-template-columns:1fr 1fr">
+    <div class="kpi"><div class="l">Target</div><div class="v" style="font-size:18px">${fmtCr(m.totalTarget)}</div></div>
+    <div class="kpi"><div class="l">Actual</div><div class="v" style="font-size:18px">${fmtCr(m.totalActual)}</div></div>
+    <div class="kpi"><div class="l">Achievement</div><div class="v" style="font-size:18px">${fmtPct(m.achv)}</div></div>
+    <div class="kpi"><div class="l">Sales Gap</div><div class="v" style="font-size:18px">${fmtCr(m.gap)}</div></div>
+  </div>
+  <div class="card" style="box-shadow:none;border:none;padding:0;margin-bottom:12px"><h3>Metrics</h3>
+    <table><tbody>
+      <tr><td>MoM change</td><td class="num">${(m.mom*100).toFixed(1)}%</td></tr>
+      <tr><td>Persistence (below threshold)</td><td class="num">${m.persistence} months</td></tr>
+      <tr><td>Volatility</td><td class="num">${(m.volatility*100).toFixed(1)}%</td></tr>
+      <tr><td>Open signals</td><td class="num">${SIGNALS.filter(s=>s.zone===z.name).length}</td></tr>
+    </tbody></table></div>
+  <div class="card" style="box-shadow:none;border:none;padding:0"><h3>Top Signals</h3>
+    ${SIGNALS.filter(s=>s.zone===z.name).map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px"><b>${s.title}</b><br/><span style="color:var(--muted)">${s.metric} ${s.cur} · impact ${s.impact}</span></div>`).join('') || '<div style="color:var(--muted)">No active signals</div>'}
+  </div>`;
+}
+
+function SIGNAL_DRAWER(s){
+  return `<div style="margin-bottom:12px"><span class="pill ${s.sev==='critical'?'crit':s.sev==='warning'?'warn':'info'}">${s.sev.toUpperCase()}</span> <span class="pill info">${s.type}</span></div>
+  <h3 style="margin:0 0 6px">${s.title}</h3>
+  <div style="color:var(--muted);font-size:12.5px;margin-bottom:14px">${s.id} · ${s.zone}</div>
+  <div class="card" style="box-shadow:none;border:none;padding:0;margin-bottom:12px"><h3>Metric</h3>
+    <table><tbody>
+      <tr><td>Metric</td><td class="num">${s.metric}</td></tr>
+      <tr><td>Current value</td><td class="num">${s.cur}</td></tr>
+      <tr><td>Previous value</td><td class="num">${s.prev}</td></tr>
+      <tr><td>Deviation</td><td class="num" style="color:${s.dev<0?'var(--neg)':'var(--pos)'}">${s.dev<0?'':''}${s.dev.toFixed(1)} pp</td></tr>
+      <tr><td>Persistence</td><td class="num">${s.pers} months</td></tr>
+      <tr><td>Estimated impact</td><td class="num">${s.impact}</td></tr>
+    </tbody></table></div>
+  <div class="card" style="box-shadow:none;border:none;padding:0"><h3>Investigation</h3>
+    <div style="font-size:12.5px;line-height:1.7">
+      <b>Business question:</b> What is driving this ${s.type.toLowerCase()} pattern?<br/>
+      <b>Hypotheses (unvalidated):</b> customer loss · distributor stock · competitor price · manpower coverage<br/>
+      <b>Evidence required:</b> sales trend · customer activity · distributor stock · competitor price · SR coverage audit<br/>
+      <b>Status:</b> <span class="pill warn">${s.status}</span>
+    </div></div>`;
+}
+
+/* =====================================================================
+   INIT
+===================================================================== */
+function init(){
+  // menu
+  document.getElementById('menu').addEventListener('click', e=>{ const a=e.target.closest('a[data-pg]'); if(a) App.nav(a.dataset.pg); });
+  document.getElementById('overlay').addEventListener('click', ()=>App.closeDrawer());
+  document.getElementById('themeBtn').addEventListener('click', ()=>App.toggleTheme());
+  // filters
+  const fMonth = document.getElementById('fMonth');
+  MONTHS.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m+' 2026'; fMonth.appendChild(o); });
+  fMonth.value = CUR;
+  ZONES.forEach(z=>{ const o=document.createElement('option'); o.value=z.name; o.textContent=z.name; document.getElementById('fZone').appendChild(o); });
+  PRODUCTS.forEach(p=>{ const o=document.createElement('option'); o.value=p.name; o.textContent=p.name; document.getElementById('fProduct').appendChild(o); });
+  document.getElementById('fView').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; document.querySelectorAll('#fView button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+  document.getElementById('notifCount').textContent = criticalCount();
+  App.nav('overview');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
