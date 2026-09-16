@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>S.M. Gaffar — Market Intelligence & Business Development</title>
+<meta name="description" content="Professional portfolio in Market Intelligence, Business Development, Strategic Planning, and Feasibility Analysis." />
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --muted: #5b6472;
+    --line: #e5e9f0;
+    --accent: #0e7c66;
+    --accent-2: #0b5f8a;
+    --accent-soft: #e6f4f1;
+    --navy: #0f172a;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: saturate(180%) blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { font-weight: 700; letter-spacing: -0.02em; }
+  .brand span { color: var(--accent); }
+  .nav-links { display: flex; gap: 22px; font-size: 0.92rem; }
+  .nav-links a { color: var(--muted); font-weight: 500; }
+  .nav-links a:hover { color: var(--ink); text-decoration: none; }
+  @media (max-width: 720px) { .nav-links { display: none; } }
+
+  /* Hero */
+  header.hero {
+    background: linear-gradient(135deg, #0f172a 0%, #12314a 55%, #0e4f43 100%);
+    color: #fff; padding: 88px 0 72px;
+  }
+  .hero .kicker {
+    display: inline-block; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #9be3cf; font-weight: 600; margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.15rem); line-height: 1.12; letter-spacing: -0.03em;
+    margin: 0 0 18px; max-width: 16ch;
+  }
+  .hero h1 em { font-style: normal; color: #7ce0c7; }
+  .hero .sub { font-size: 1.12rem; color: #cbd5e1; max-width: 62ch; margin: 0 0 28px; }
+  .hero .pills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .hero .pill {
+    border: 1px solid rgba(255,255,255,0.25); border-radius: 999px;
+    padding: 7px 15px; font-size: 0.86rem; color: #e2e8f0;
+  }
+
+  /* Sections */
+  section { padding: 64px 0; }
+  section.alt { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  h2 {
+    font-size: 1.7rem; letter-spacing: -0.02em; margin: 0 0 8px;
+  }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0 0 32px; }
+  .rule { width: 48px; height: 4px; background: var(--accent); border-radius: 4px; margin-bottom: 18px; }
+
+  /* Cards */
+  .grid { display: grid; gap: 20px; }
+  .cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .cols-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) { .cols-2, .cols-4 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow);
+  }
+  .card h3 { margin: 0 0 10px; font-size: 1.1rem; letter-spacing: -0.01em; }
+  .card h3 .num { color: var(--accent); margin-right: 6px; }
+  .card p { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }
+  .card ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.92rem; }
+  .card ul li { margin-bottom: 6px; }
+  .tag {
+    display: inline-block; font-size: 0.78rem; font-weight: 600; color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px; padding: 3px 9px; margin: 2px 4px 2px 0;
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); font-size: 0.94rem; }
+  thead th { background: #0f172a; color: #fff; text-align: left; padding: 12px 16px; font-weight: 600; white-space: nowrap; }
+  tbody td { padding: 11px 16px; border-top: 1px solid var(--line); }
+  tbody tr:nth-child(even) { background: #fafbfd; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .strong { font-weight: 700; }
+  .good { color: var(--accent); font-weight: 600; }
+  .warn { color: #b45309; font-weight: 600; }
+  .bad { color: #b91c1c; font-weight: 600; }
+
+  /* Projects */
+  .project { border-left: 4px solid var(--accent); padding-left: 20px; margin-bottom: 40px; }
+  .project h3 { margin: 0 0 6px; font-size: 1.25rem; }
+  .project .meta { font-size: 0.82rem; color: var(--accent-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .project h4 { margin: 18px 0 8px; font-size: 1rem; }
+
+  /* Steps */
+  .steps { display: grid; gap: 14px; counter-reset: step; }
+  .step {
+    display: flex; gap: 16px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .step .idx {
+    counter-increment: step; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700;
+  }
+  .step .idx::before { content: counter(step); }
+  .step b { display: block; margin-bottom: 2px; }
+  .step span { color: var(--muted); font-size: 0.92rem; }
+
+  /* Tools */
+  .tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .tool { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .tool b { display: block; margin-bottom: 6px; }
+  .tool span { color: var(--muted); font-size: 0.9rem; }
+
+  /* Footer / Contact */
+  footer {
+    background: #0f172a; color: #cbd5e1; padding: 64px 0 40px;
+  }
+  footer h2 { color: #fff; }
+  footer .lede { color: #94a3b8; }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 20px; }
+  .contact-links a {
+    display: inline-flex; align-items: center; gap: 8px; color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; padding: 10px 18px; font-size: 0.92rem;
+  }
+  .contact-links a:hover { background: rgba(255,255,255,0.08); text-decoration: none; }
+  .footnote { margin-top: 40px; font-size: 0.82rem; color: #64748b; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 20px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">S.M.&nbsp;Gaffar <span>/</span> Market Intelligence</div>
+    <div class="nav-links">
+      <a href="#summary">Summary</a>
+      <a href="#domains">Domains</a>
+      <a href="#frameworks">Frameworks</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Professional Portfolio</span>
+    <h1>Turning market data into <em>strategic decisions</em>.</h1>
+    <p class="sub">An evidence-based portfolio of Market Research, Competitive Intelligence, Strategic Analysis, and Business Case Development — supporting growth, pricing, and market-entry decisions.</p>
+    <div class="pills">
+      <span class="pill">Market Intelligence</span>
+      <span class="pill">Business Development</span>
+      <span class="pill">Strategic Planning</span>
+      <span class="pill">Feasibility Analysis</span>
+    </div>
+  </div>
+</header>
+
+<section id="summary">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>Professional Summary</h2>
+    <p class="lede">I am a market intelligence and business development professional focused on converting raw market data into clear, actionable business insight across four interlocking disciplines.</p>
+    <div class="grid cols-2">
+      <div class="card"><h3>Market Intelligence</h3><p>Where is the market now, and where is it heading?</p></div>
+      <div class="card"><h3>Business Development</h3><p>Where are the growth opportunities, and how do we capture them?</p></div>
+      <div class="card"><h3>Strategic Planning</h3><p>Which direction should the business take, and why?</p></div>
+      <div class="card"><h3>Feasibility Analysis</h3><p>Is the opportunity viable, affordable, and worth the risk?</p></div>
+    </div>
+    <p style="margin-top:24px;color:var(--muted)">Together these form one decision loop: <b>observe the market → size the opportunity → set the strategy → validate the business case → execute and measure.</b></p>
+  </div>
+</section>
+
+<section id="domains" class="alt">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>Core Domains</h2>
+    <p class="lede">Four disciplines, one objective: measurable, well-founded business growth.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3><span class="num">01</span>Market Intelligence</h3>
+        <p>Systematic collection, validation, and interpretation of market data to understand demand, competition, customers, and channels.</p>
+        <span class="tag">Market Research</span><span class="tag">Competitive Intelligence</span><span class="tag">Market Sizing</span><span class="tag">Channel Audit</span><span class="tag">Customer Insights</span><span class="tag">Pricing Intelligence</span><span class="tag">Forecasting</span>
+        <ul>
+          <li>Porter's Five Forces · PESTLE · competitive benchmarking</li>
+          <li>TAM / SAM / SOM market sizing</li>
+          <li>CSAT · CSI · NPS · Kano · Importance–Performance</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="num">02</span>Business Development</h3>
+        <p>Identifying, evaluating, and converting market opportunities into measurable growth — new markets, channels, products, and partnerships.</p>
+        <span class="tag">Opportunity ID</span><span class="tag">Go-to-Market</span><span class="tag">Channel Development</span><span class="tag">Pipeline</span><span class="tag">Growth Analytics</span>
+        <ul>
+          <li>Ansoff Matrix · GTM &amp; channel strategy</li>
+          <li>Sales funnel · win-rate · LTV/CAC economics</li>
+          <li>Partner &amp; distributor scorecards</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="num">03</span>Strategic Planning</h3>
+        <p>Translating market insight into a clear, defensible direction and an executable plan to get there.</p>
+        <span class="tag">SWOT</span><span class="tag">PESTLE</span><span class="tag">Portfolio Strategy</span><span class="tag">OKRs</span><span class="tag">Scenario Planning</span>
+        <ul>
+          <li>BCG · GE–McKinsey · Ansoff matrices</li>
+          <li>Porter's Generic Strategies · Blue Ocean</li>
+          <li>Balanced Scorecard · OKRs · KPI trees</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="num">04</span>Feasibility Analysis</h3>
+        <p>Stress-testing an idea before capital is committed — across market, technical, operational, financial, and legal dimensions.</p>
+        <span class="tag">Financial Modeling</span><span class="tag">NPV / IRR</span><span class="tag">Break-even</span><span class="tag">Sensitivity</span><span class="tag">Risk Register</span>
+        <ul>
+          <li>NPV · IRR · payback · break-even · ROI</li>
+          <li>Sensitivity &amp; scenario analysis</li>
+          <li>Stage-gate and go / no-go decisions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="frameworks">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>Methodology &amp; Frameworks</h2>
+    <p class="lede">A consolidated view of the frameworks applied across engagements.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>Frameworks &amp; Methods</th></tr></thead>
+        <tbody>
+          <tr><td>Environment analysis</td><td>PESTLE, Porter's Five Forces</td></tr>
+          <tr><td>Internal analysis</td><td>SWOT, VRIO, value-chain analysis</td></tr>
+          <tr><td>Portfolio &amp; growth</td><td>BCG, GE–McKinsey, Ansoff</td></tr>
+          <tr><td>Strategy choice</td><td>Porter's Generic Strategies, Blue Ocean</td></tr>
+          <tr><td>Market sizing</td><td>TAM / SAM / SOM (top-down &amp; bottom-up)</td></tr>
+          <tr><td>Customer insight</td><td>CSAT, CSI, NPS, Kano, IPA, segmentation</td></tr>
+          <tr><td>Financial validation</td><td>NPV, IRR, payback, break-even, ROI, sensitivity</td></tr>
+          <tr><td>Execution &amp; tracking</td><td>Balanced Scorecard, OKRs, KPI trees, dashboards</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid cols-2" style="margin-top:28px">
+      <div class="card"><h3>Operating principles</h3>
+        <ul>
+          <li>Evidence over opinion — every conclusion traces to a data point.</li>
+          <li>One clean dataset feeds all analysis.</li>
+          <li>Every KPI is a formula — models recalculate.</li>
+        </ul>
+      </div>
+      <div class="card"><h3>&nbsp;</h3>
+        <ul>
+          <li>Every recommendation is actionable — owner, deadline, metric.</li>
+          <li>Reproducible work — documented and auditable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects" class="alt">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>Portfolio Projects</h2>
+    <p class="lede">Selected engagements demonstrating the four disciplines in practice. Figures are illustrative and anonymized for demonstration.</p>
+
+    <div class="project">
+      <div class="meta">Market Intelligence · Sales Analysis · Business Development</div>
+      <h3>Regional Sales vs. Target Achievement (FMCG / Bulk)</h3>
+      <p>Diagnosed regional performance across six sales divisions by comparing actual sales against target, in both value and volume, over three months — rebuilding region-level achievement from a multi-level territory hierarchy.</p>
+      <h4>3-month value achievement by region</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Region</th><th class="num">Jul</th><th class="num">Aug</th><th class="num">Sep (MTD)</th></tr></thead>
+          <tbody>
+            <tr><td>Dhaka South</td><td class="num good">91%</td><td class="num good">88%</td><td class="num">38%</td></tr>
+            <tr><td>Chittagong</td><td class="num">66%</td><td class="num">75%</td><td class="num">30%</td></tr>
+            <tr><td>Khulna</td><td class="num">66%</td><td class="num">73%</td><td class="num">32%</td></tr>
+            <tr><td>Dhaka North</td><td class="num">66%</td><td class="num">69%</td><td class="num warn">18%</td></tr>
+            <tr><td>Sylhet</td><td class="num">56%</td><td class="num">62%</td><td class="num">24%</td></tr>
+            <tr><td>Rajshahi</td><td class="num warn">43%</td><td class="num warn">44%</td><td class="num">30%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Insight &amp; action</h4>
+      <p>Dhaka South was the consistent leader; Rajshahi a persistent under-performer, flagged for route-to-market and coverage review. Realized average selling price ran below target, so value achievement lagged volume — informing a pricing and SKU-mix intervention.</p>
+    </div>
+
+    <div class="project">
+      <div class="meta">Product Analysis · Strategic Planning · Portfolio Prioritization</div>
+      <h3>Product &amp; Segment Performance — "Akij Essential"</h3>
+      <p>Broke a 58-SKU branded FMCG portfolio into categories and two strategic segments — <b>Bulk (Rice, Flour &amp; Dal)</b> vs. <b>Consumer</b> — to guide invest / hold / fix / exit decisions.</p>
+      <h4>3-month value achievement by segment &amp; category</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Segment / Category</th><th class="num">Achievement</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Bulk (Rice, Flour &amp; Dal)</td><td class="num strong good">60%</td></tr>
+            <tr><td style="padding-left:32px">· Rice</td><td class="num good">68%</td></tr>
+            <tr><td style="padding-left:32px">· Flour</td><td class="num">59%</td></tr>
+            <tr><td style="padding-left:32px">· Dal (Lentils)</td><td class="num bad">27%</td></tr>
+            <tr><td class="strong">Consumer</td><td class="num strong warn">45%</td></tr>
+            <tr><td style="padding-left:32px">· Salt</td><td class="num">60%</td></tr>
+            <tr><td style="padding-left:32px">· Edible Oil</td><td class="num">50%</td></tr>
+            <tr><td style="padding-left:32px">· Spices</td><td class="num">36%</td></tr>
+            <tr><td style="padding-left:32px">· Others</td><td class="num">29%</td></tr>
+            <tr><td style="padding-left:32px">· Tea</td><td class="num bad">11%</td></tr>
+            <tr><td class="strong">Total portfolio</td><td class="num strong">56%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Insight &amp; action</h4>
+      <p>The Bulk segment clearly outperformed Consumer, driven by Rice. Tea and Dal emerged as priority problem areas, and the output was translated into a BCG-style matrix to guide portfolio decisions.</p>
+    </div>
+
+    <div class="project">
+      <div class="meta">Market Intelligence · Data Collection · Tooling</div>
+      <h3>Field Survey Application for Primary Research</h3>
+      <p>Built a lightweight React + Vite web application to capture structured field survey responses and route them into a clean, pivot-ready dataset — demonstrating end-to-end primary-research capability from instrument design to analysis.</p>
+    </div>
+
+    <div class="project">
+      <div class="meta">Market Intelligence · Commodity &amp; Trend Analysis</div>
+      <h3>Commodity Data Reporting (Paddy / Raw Material)</h3>
+      <p>Produced periodic market data reports on an agricultural commodity to support input-cost monitoring and procurement decisions, with all assumptions documented for transparency.</p>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>Tools &amp; Technologies</h2>
+    <p class="lede">The toolkit used across portfolio work.</p>
+    <div class="tools">
+      <div class="tool"><b>Analysis &amp; BI</b><span>Excel (formulas, PivotTables, dashboards), SQL, Python (pandas)</span></div>
+      <div class="tool"><b>Visualization</b><span>Excel charts, interactive dashboards</span></div>
+      <div class="tool"><b>Web &amp; tooling</b><span>React, Vite, JavaScript, Node.js</span></div>
+      <div class="tool"><b>Data &amp; databases</b><span>SQL Server, relational data modeling</span></div>
+      <div class="tool"><b>Productivity</b><span>PowerPoint (executive decks), Word (reports)</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="work" class="alt">
+  <div class="wrap">
+    <div class="rule"></div>
+    <h2>How I Work</h2>
+    <p class="lede">A repeatable, evidence-based workflow.</p>
+    <div class="steps">
+      <div class="step"><div class="idx"></div><div><b>Frame</b><span>Clarify the decision the analysis must support.</span></div></div>
+      <div class="step"><div class="idx"></div><div><b>Collect</b><span>Primary and secondary data into one staging area.</span></div></div>
+      <div class="step"><div class="idx"></div><div><b>Clean &amp; validate</b><span>Normalize, deduplicate, and verify.</span></div></div>
+      <div class="step"><div class="idx"></div><div><b>Analyze</b><span>Apply the appropriate frameworks and financial models.</span></div></div>
+      <div class="step"><div class="idx"></div><div><b>Synthesize</b><span>Turn findings into insights and a recommendation.</span></div></div>
+      <div class="step"><div class="idx"></div><div><b>Communicate</b><span>Executive summary, dashboards, and an action plan.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="rule" style="background:#7ce0c7"></div>
+    <h2>Let's connect</h2>
+    <p class="lede">Interested in collaborating or learning more about my work?</p>
+    <div class="contact-links">
+      <a href="mailto:smgaffar20@gmail.com">✉ smgaffar20@gmail.com</a>
+    </div>
+    <p class="footnote">© S.M. Gaffar · This portfolio demonstrates a structured, evidence-based approach to Market Intelligence, Business Development, Strategic Planning, and Feasibility Analysis. All data and examples are anonymized and presented for demonstration purposes only.</p>
+  </div>
+</footer>
+
+</body>
+</html>
