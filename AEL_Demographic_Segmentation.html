@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AEL — Demographic Segmentation & Market Structure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0B1F33; --blue:#123B5D; --slate:#475569; --bg:#F5F7FA; --white:#fff;
+  --pos:#16845B; --warn:#D99A00; --neg:#19304a; --line:#E5E9F0; --muted:#64748b; --ink:#0B1F33;
+  --c1:#0B1F33; --c2:#123B5D; --c3:#16845B; --c4:#D99A00; --c5:#C83E4D; --c6:#5B7A9D;
+  --radius:12px; --shadow:0 1px 2px rgba(11,31,51,.05),0 6px 18px rgba(11,31,51,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Inter',system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+header.top{background:var(--navy);color:#fff;padding:34px 0 28px}
+header.top h1{font-size:22px;margin:0 0 6px;letter-spacing:-.02em}
+header.top p{margin:0;color:#9fb3c8;font-size:13px;max-width:70ch}
+header.top .meta{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap}
+header.top .meta span{font-size:11.5px;color:#7c93ab;border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px}
+
+section{padding:26px 0}
+h2{font-size:16px;margin:0 0 4px;letter-spacing:-.01em}
+.lede{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.kpi .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px}
+.kpi .v{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.kpi .s{font-size:11px;color:var(--muted);margin-top:5px}
+
+.grid{display:grid;gap:16px;margin-bottom:22px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.card h3{font-size:13.5px;margin:0 0 2px}
+.card .hint{font-size:11px;color:var(--muted);margin-bottom:12px}
+.chart{position:relative;height:250px}
+.chart.tall{height:300px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:8px 10px}
+td{padding:9px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px}
+.pill.pos{background:#e6f4ee;color:var(--pos)} .pill.warn{background:#fdf3dd;color:#9a6a00} .pill.info{background:#e8eef7;color:var(--blue)}
+
+.personas{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.persona{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-top:4px solid var(--c2)}
+.persona .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.persona .name{font-weight:700;font-size:15px}
+.persona .size{font-size:11px;color:var(--muted)}
+.persona p{margin:0 0 10px;font-size:12.5px;color:var(--slate)}
+.persona .tags{display:flex;flex-wrap:wrap;gap:6px}
+.persona .tags span{font-size:10.5px;background:#f1f5f9;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--slate)}
+.persona .opp{margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px}
+.meter{flex:1;height:7px;border-radius:6px;background:#eef1f5;overflow:hidden}
+.meter>span{display:block;height:100%;background:var(--pos);border-radius:6px}
+
+footer{border-top:1px solid var(--line);padding:22px 0 34px;color:var(--muted);font-size:12px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>AEL — Demographic Segmentation &amp; Market Structure</h1>
+    <p>Consumer &amp; household demographic segments driving Akij Essential (AEL) demand — geography, age, income, household, occupation and education, with segment opportunity scoring.</p>
+    <div class="meta">
+      <span>Scope: Bangladesh · 8 divisions</span>
+      <span>Sample: 1,284 households / 4,350 consumers</span>
+      <span>Updated: Sep 2026</span>
+      <span>Source: R&amp;I field survey + retail census</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Addressable Households</div><div class="v">36.2M</div><div class="s">Bangladesh</div></div>
+      <div class="kpi"><div class="l">Primary Segment</div><div class="v">Rural Staples</div><div class="s">38% of volume</div></div>
+      <div class="kpi"><div class="l">Urban Share</div><div class="v">32%</div><div class="s">+2 pp YoY</div></div>
+      <div class="kpi"><div class="l">Key Income Band</div><div class="v">15–25k</div><div class="s">BDT / month · 28%</div></div>
+      <div class="kpi"><div class="l">Segments Tracked</div><div class="v">6</div><div class="s">Primary personas</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Geographic Split</h2>
+    <p class="lede">Urban vs semi-urban vs rural — shapes pack size, channel and route-to-market.</p>
+    <div class="grid g3">
+      <div class="card"><h3>Urban / Semi-urban / Rural</h3><div class="hint">Share of consumers</div><div class="chart"><canvas id="geoChart"></canvas></div></div>
+      <div class="card"><h3>Division Demand Index</h3><div class="hint">Relative consumption (national = 100)</div><div class="chart"><canvas id="divChart"></canvas></div></div>
+      <div class="card"><h3>Channel Preference</h3><div class="hint">Where each geography buys</div>
+        <table><thead><tr><th>Geography</th><th class="num">Grocery</th><th class="num">Bazaar</th><th class="num">Super</th></tr></thead>
+        <tbody>
+          <tr><td>Urban</td><td class="num">38%</td><td class="num">22%</td><td class="num">40%</td></tr>
+          <tr><td>Semi-urban</td><td class="num">48%</td><td class="num">34%</td><td class="num">18%</td></tr>
+          <tr><td>Rural</td><td class="num">44%</td><td class="num">51%</td><td class="num">5%</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Demographic Distribution</h2>
+    <p class="lede">Age, income, household size and occupation of AEL consumers.</p>
+    <div class="grid g2">
+      <div class="card"><h3>Age Distribution</h3><div class="hint">Primary purchaser age groups</div><div class="chart"><canvas id="ageChart"></canvas></div></div>
+      <div class="card"><h3>Monthly Household Income</h3><div class="hint">BDT per month</div><div class="chart"><canvas id="incomeChart"></canvas></div></div>
+      <div class="card"><h3>Household Size</h3><div class="hint">Members per household</div><div class="chart"><canvas id="hhChart"></canvas></div></div>
+      <div class="card"><h3>Occupation</h3><div class="hint">Primary earner occupation</div><div class="chart"><canvas id="occChart"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Segment Profiles</h2>
+    <p class="lede">Six primary personas with size, behaviour and opportunity score.</p>
+    <div class="personas" id="personas"></div>
+  </section>
+
+  <section>
+    <h2>Segment × Category Affinity</h2>
+    <p class="lede">Relative demand intensity (index vs. national average) — guides category focus per segment.</p>
+    <div class="card">
+      <table>
+        <thead><tr><th>Segment</th><th class="num">Rice</th><th class="num">Flour</th><th class="num">Dal</th><th class="num">Oil</th><th class="num">Salt</th><th class="num">Tea</th><th class="num">Spices</th></tr></thead>
+        <tbody id="affinity"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>© S.M. Gaffar · AEL Demographic Segmentation</div>
+    <div>Sample data · illustrative for demonstration</div>
+  </div>
+</footer>
+
+<script>
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+
+const PAL = ['#0B1F33','#123B5D','#16845B','#D99A00','#C83E4D','#5B7A9D'];
+
+function opts(){ return {responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}; }
+
+// Geographic
+new Chart(document.getElementById('geoChart'), {type:'doughnut',
+  data:{labels:['Urban','Semi-urban','Rural'], datasets:[{data:[32,18,50], backgroundColor:['#123B5D','#16845B','#D99A00'], borderWidth:0}]},
+  options:{...opts(), cutout:'62%', plugins:{legend:{position:'bottom', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}}}}});
+
+// Division demand index
+new Chart(document.getElementById('divChart'), {type:'bar',
+  data:{labels:['Dhaka','Chittagong','Khulna','Rajshahi','Sylhet','Barisal','Rangpur','Mymensingh'],
+    datasets:[{data:[128,116,98,88,91,82,79,84], backgroundColor:['#0B1F33','#123B5D','#16845B','#D99A00','#16845B','#5B7A9D','#5B7A9D','#5B7A9D'], borderRadius:4}]},
+  options:{...opts(), scales:{x:{grid:{display:false}}, y:{grid:{color:'#eef1f5'}, title:{display:true,text:'Index'}}}}});
+
+// Age
+new Chart(document.getElementById('ageChart'), {type:'bar',
+  data:{labels:['18–24','25–34','35–44','45–54','55+'], datasets:[{data:[18,28,24,18,12], backgroundColor:PAL, borderRadius:4}]},
+  options:{...opts(), scales:{x:{grid:{display:false}}, y:{grid:{color:'#eef1f5'}, ticks:{callback:v=>v+'%'}}}}});
+
+// Income
+new Chart(document.getElementById('incomeChart'), {type:'bar',
+  data:{labels:['<15k','15–25k','25–40k','40–60k','60k+'], datasets:[{data:[22,28,24,16,10], backgroundColor:PAL, borderRadius:4}]},
+  options:{...opts(), scales:{x:{grid:{display:false}}, y:{grid:{color:'#eef1f5'}, ticks:{callback:v=>v+'%'}}}}});
+
+// Household size
+new Chart(document.getElementById('hhChart'), {type:'bar',
+  data:{labels:['1–2','3–4','5–6','7+'], datasets:[{data:[12,38,34,16], backgroundColor:['#123B5D','#16845B','#D99A00','#C83E4D'], borderRadius:4}]},
+  options:{...opts(), scales:{x:{grid:{display:false}}, y:{grid:{color:'#eef1f5'}, ticks:{callback:v=>v+'%'}}}}});
+
+// Occupation
+new Chart(document.getElementById('occChart'), {type:'bar',
+  data:{labels:['Service','Business','Day labour','Agriculture','Homemaker','Student'], datasets:[{data:[22,20,18,15,16,9], backgroundColor:PAL, borderRadius:4}]},
+  options:{...opts(), indexAxis:'y', scales:{x:{grid:{color:'#eef1f5'}, ticks:{callback:v=>v+'%'}}, y:{grid:{display:false}}}}});
+
+// Personas
+const PERSONAS = [
+  {name:'Rural Staples', size:'38% of volume', desc:'Rural households, mid-age, core commodity buyers of Atta, Rice, Salt and Dal in bulk/family packs. Price-sensitive, brand-loyal to AEL.', tags:['Rural 55%','35–54','15–25k BDT','Agriculture / labour'], opp:62, color:'#16845B'},
+  {name:'Urban Aspirants', size:'24% of volume', desc:'Urban professionals 25–34, rising income, graduate. Seek convenience, quality and smaller premium packs; growing super-shop usage.', tags:['Urban 72%','25–34','40–60k BDT','Service / professional'], opp:88, color:'#123B5D'},
+  {name:'Semi-urban Traders', size:'16% of volume', desc:'Semi-urban business owners who buy larger SKUs (25kg) for resale and household. Distributor-linked, bulk-focused.', tags:['Semi-urban 60%','35–44','25–40k BDT','Business'], opp:71, color:'#D99A00'},
+  {name:'Affluent Families', size:'10% of volume', desc:'High-income urban families 35–54, health-conscious. Premium, fortified and organic variants; low price sensitivity.', tags:['Urban 85%','35–54','60k+ BDT','Graduate+'], opp:80, color:'#0B1F33'},
+  {name:'Young Starters', size:'7% of volume', desc:'Students & first earners 18–24. Small packs, sachets and single-serve. Digital and impulse-driven.', tags:['Urban 58%','18–24','<15k BDT','Student'], opp:54, color:'#C83E4D'},
+  {name:'Homemaker Gatekeepers', size:'5% of volume', desc:'Homemakers 25–44 who make household purchase decisions. Value trust, cooking utility and family nutrition.', tags:['Urban 46%','25–44','15–40k BDT','Homemaker'], opp:67, color:'#5B7A9D'},
+];
+
+const pEl = document.getElementById('personas');
+PERSONAS.forEach(p=>{
+  const d = document.createElement('div');
+  d.className = 'persona';
+  d.style.borderTopColor = p.color;
+  d.innerHTML = `<div class="head"><span class="name">${p.name}</span><span class="size">${p.size}</span></div>
+    <p>${p.desc}</p>
+    <div class="tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+    <div class="opp"><span>Opportunity</span><div class="meter"><span style="width:${p.opp}%"></span></div><b>${p.opp}</b></div>`;
+  pEl.appendChild(d);
+});
+
+// Affinity matrix
+const AFF = [
+  ['Rural Staples', 132, 128, 118, 104, 122, 96, 88],
+  ['Urban Aspirants', 88, 96, 92, 108, 84, 116, 124],
+  ['Semi-urban Traders', 118, 112, 108, 106, 110, 98, 102],
+  ['Affluent Families', 76, 88, 86, 102, 74, 118, 132],
+  ['Young Starters', 62, 74, 66, 88, 70, 108, 96],
+  ['Homemaker Gatekeepers', 98, 104, 100, 102, 96, 108, 118],
+];
+const affEl = document.getElementById('affinity');
+AFF.forEach(r=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><b>${r[0]}</b></td>` + r.slice(1).map(v=>{
+    const cls = v>=120?'pos':(v>=105?'info':(v<=80?'warn':''));
+    return `<td class="num">${v}</td>`;
+  }).join('');
+  affEl.appendChild(tr);
+});
+</script>
+</body>
+</html>
