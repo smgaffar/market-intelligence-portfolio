@@ -1,0 +1,22 @@
+# opencode config (contains MCP API keys — do not commit)
+opencode.json
+opencode.jsonc
+.opencode/
+
+# browser automation profiles / state
+.browser-profile/
+.playwright-mcp/
+
+# dependencies
+node_modules/
+
+# build artifacts & screenshots
+*.zip
+*.png
+*.jpg
+
+# raw source data (real business data — keep out of public repo)
+*.xlsx
+gmail-inbox-snapshot.yml
+gmail-inbox.png
+reports/
